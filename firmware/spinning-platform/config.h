@@ -8,10 +8,9 @@ const uint8_t PIN_IN3 = D8;
 const uint8_t PIN_IN4 = D7;
 
 const uint8_t PIN_POT = A0;         // pot wiper (pot on 3V3)
-const uint8_t PIN_VBAT = A1;        // battery via 100k/100k divider
+const uint8_t PIN_VBAT = A1;        // switched supply (battery, or ~4.7 V on USB) via 100k/100k
 const uint8_t PIN_HX_DOUT = D2;     // HX711 breakout, powered from 3V3
 const uint8_t PIN_HX_SCK = D3;
-const uint8_t PIN_STATUS_LED = D6;         // status LED (active high)
 
 // Set to 0 when no battery divider is wired (e.g. the V1 board test rig).
 #define BATTERY_SENSE 1

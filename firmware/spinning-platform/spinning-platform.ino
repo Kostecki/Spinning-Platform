@@ -11,8 +11,13 @@
 #include "config.h"
 #include "hx711.h"
 
+// Persistent settings: EEPROM emulation on RP2040, FlashStorage library on SAMD21.
+// Note: on SAMD21 uploading a new sketch erases the stored tare/calibration.
 #if defined(ARDUINO_ARCH_RP2040)
 #include <EEPROM.h>
+#define HAS_STORAGE 1
+#elif defined(ARDUINO_ARCH_SAMD)
+#include <FlashStorage.h>
 #define HAS_STORAGE 1
 #else
 #define HAS_STORAGE 0
@@ -33,11 +38,19 @@ int32_t savedTareRaw = 0;
 uint32_t lastSaveMs = 0;
 bool savedThisBoot = false;
 
+#if defined(ARDUINO_ARCH_SAMD)
+FlashStorage(settingsFlash, Settings);
+#endif
+
 void loadSettings() {
 #if HAS_STORAGE
-  EEPROM.begin(64);
   Settings s;
+#if defined(ARDUINO_ARCH_RP2040)
+  EEPROM.begin(64);
   EEPROM.get(0, s);
+#else
+  s = settingsFlash.read();
+#endif
   if (s.magic == SETTINGS_MAGIC && s.countsPerGram != 0 && !isnan(s.countsPerGram)) {
     settings = s;
     haveStoredTare = true;
@@ -48,8 +61,12 @@ void loadSettings() {
 
 void saveSettings() {
 #if HAS_STORAGE
+#if defined(ARDUINO_ARCH_RP2040)
   EEPROM.put(0, settings);
   EEPROM.commit();
+#else
+  settingsFlash.write(settings);
+#endif
   lastSaveMs = millis();
   savedThisBoot = true;
   haveStoredTare = true;
@@ -269,19 +286,6 @@ void updatePresence() {
   }
 }
 
-// ---------------------------------------------------------------- LED
-
-void updateLed() {
-  uint32_t t = millis();
-  bool on;
-  switch (state) {
-    case RUNNING: on = true; break;
-    case LOW_BATT: on = (t % 1000) < 100 || ((t % 1000) > 200 && (t % 1000) < 300); break;
-    default: on = (t % 3000) < 30; break;  // brief blip while waiting
-  }
-  digitalWrite(PIN_STATUS_LED, on);
-}
-
 // ---------------------------------------------------------------- serial
 
 float sq_f(float x) { return x * x; }
@@ -343,7 +347,6 @@ void logSample() {
 void setup() {
   for (uint8_t i = 0; i < 4; i++) pinMode(MOTOR_PINS[i], OUTPUT);
   releaseCoils();
-  pinMode(PIN_STATUS_LED, OUTPUT);
   analogReadResolution(12);
   Serial.begin(115200);
   Serial.setTimeout(20);
@@ -370,7 +373,6 @@ void loop() {
   updatePresence();
   targetRpm = ((state == RUNNING || forceRun) && !lowBattery) ? potRpm() : 0;
   updateMotor();
-  updateLed();
   handleSerial();
   logSample();
 }
