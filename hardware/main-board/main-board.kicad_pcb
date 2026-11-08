@@ -100,6 +100,7 @@
 		(property "Reference" "H1"
 			(at 0 -4.15 0)
 			(layer "F.SilkS")
+			(hide yes)
 			(uuid "d797f805-7ba7-441b-aba6-f262f4c0e7ee")
 			(effects
 				(font
@@ -204,7 +205,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C3"
-			(at 2.5 -2.5 270)
+			(at 2.900 -3.200 0)
 			(layer "F.SilkS")
 			(uuid "53fc4e48-0b86-442d-81ff-5905b903014a")
 			(effects
@@ -392,7 +393,7 @@
 		(descr "Generic Phoenix Contact connector footprint for: MCV_1,5/2-G-3.5; number of pins: 02; pin pitch: 3.50mm; Vertical || order number: 1843606 8A 160V")
 		(tags "phoenix_contact connector MCV_01x02_G_3.5mm")
 		(property "Reference" "J1"
-			(at 1.75 -5.45 0)
+			(at 1.75 5.2 0)
 			(layer "F.SilkS")
 			(uuid "12a0a3bd-70c1-497b-8e2a-5ad398bcbd4d")
 			(effects
@@ -942,28 +943,6 @@
 				)
 			)
 		)
-		(fp_text user "OUT+"
-			(at -5.2 -0.945 0)
-			(layer "F.Fab")
-			(uuid "77d43134-2144-4318-9c4e-f4238d6f965e")
-			(effects
-				(font
-					(size 0.6 0.6)
-					(thickness 0.15)
-				)
-			)
-		)
-		(fp_text user "IN+"
-			(at 5.2 -0.945 0)
-			(layer "F.Fab")
-			(uuid "a401cd12-5369-4bd9-ad17-7a8d19a43341")
-			(effects
-				(font
-					(size 0.6 0.6)
-					(thickness 0.15)
-				)
-			)
-		)
 		(pad "1" thru_hole circle
 			(at 5.4 -2.545)
 			(size 1.8 1.8)
@@ -1001,6 +980,50 @@
 			(uuid "5fdee7f5-c017-4216-a803-d99faccc2b34")
 		)
 		(embedded_fonts no)
+		(fp_text user "OUT+"
+			(at -2.6 -2.545 0)
+			(layer "F.SilkS")
+			(uuid "78abe729-6b23-4136-8d63-489ae1f61353")
+			(effects
+				(font
+					(size 0.8 0.8)
+					(thickness 0.15)
+				)
+			)
+		)
+		(fp_text user "IN+"
+			(at 2.9 -2.545 0)
+			(layer "F.SilkS")
+			(uuid "1a319a79-dfa7-460a-97a3-b18c30092e8e")
+			(effects
+				(font
+					(size 0.8 0.8)
+					(thickness 0.15)
+				)
+			)
+		)
+		(fp_text user "GND"
+			(at -3.0 2.545 0)
+			(layer "F.SilkS")
+			(uuid "24afb44b-0e8a-4360-9a4c-9faf691980d8")
+			(effects
+				(font
+					(size 0.8 0.8)
+					(thickness 0.15)
+				)
+			)
+		)
+		(fp_text user "GND"
+			(at 3.0 2.545 0)
+			(layer "F.SilkS")
+			(uuid "7bae64a5-4635-4be3-aeb2-dc4142786b68")
+			(effects
+				(font
+					(size 0.8 0.8)
+					(thickness 0.15)
+				)
+			)
+		)
 	)
 	(footprint "Package_TO_SOT_SMD:SOT-23_Handsoldering"
 		(layer "F.Cu")
@@ -1265,7 +1288,7 @@
 		(descr "Generic Phoenix Contact connector footprint for: MCV_1,5/3-G-3.5; number of pins: 03; pin pitch: 3.50mm; Vertical || order number: 1843619 8A 160V")
 		(tags "phoenix_contact connector MCV_01x03_G_3.5mm")
 		(property "Reference" "J8"
-			(at 3.5 -5.45 0)
+			(at 3.5 5.2 0)
 			(layer "F.SilkS")
 			(uuid "4b0be50d-f4df-4791-9136-d9d8e9f0f9b9")
 			(effects
@@ -2465,7 +2488,7 @@
 		(descr "Through hole straight pin header, 1x04, 2.54mm pitch, single row")
 		(tags "Through hole pin header THT 1x04 2.54mm single row")
 		(property "Reference" "J7"
-			(at 0 -2.38 90)
+			(at 0.000 11.000 0)
 			(layer "F.SilkS")
 			(uuid "62b366b9-4d98-415e-8f51-1bd4d577cdda")
 			(effects
@@ -2713,6 +2736,7 @@
 		(property "Reference" "H4"
 			(at 0 -4.15 0)
 			(layer "F.SilkS")
+			(hide yes)
 			(uuid "7364203c-492a-435d-8d33-2316b886b10c")
 			(effects
 				(font
@@ -3607,17 +3631,6 @@
 		)
 		(fp_text user "K"
 			(at 0 -2.1 0)
-			(layer "F.SilkS")
-			(uuid "7e109033-f588-4b18-85d4-5284a89d802e")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-			)
-		)
-		(fp_text user "K"
-			(at 0 -2.1 0)
 			(layer "F.Fab")
 			(uuid "fddef3aa-0773-42c2-8269-93262c640b93")
 			(effects
@@ -3885,7 +3898,7 @@
 		(descr "Resistor, Axial_DIN0207 series, Axial, Horizontal, pin pitch=7.62mm, 0.25W = 1/4W, length*diameter=6.3*2.5mm^2, http://cdn-reichelt.de/documents/datenblatt/B400/1_4W%23YAG.pdf")
 		(tags "Resistor Axial_DIN0207 series Axial Horizontal pin pitch 7.62mm 0.25W = 1/4W length 6.3mm diameter 2.5mm")
 		(property "Reference" "R1"
-			(at 3.81 -2.37 270)
+			(at 4.000 -3.100 0)
 			(layer "F.SilkS")
 			(uuid "1b63d7e0-56a0-44cd-84f4-d77ce961d1c1")
 			(effects
@@ -4325,6 +4338,7 @@
 		(property "Reference" "M1"
 			(at 8 -3 0)
 			(layer "F.SilkS")
+			(hide yes)
 			(uuid "9bb2490b-9266-4241-b1e5-364c7ea4f0cc")
 			(effects
 				(font
@@ -4543,6 +4557,7 @@
 		(property "Reference" "H3"
 			(at 0 -4.15 0)
 			(layer "F.SilkS")
+			(hide yes)
 			(uuid "f93d44ad-3e5f-4cee-8afe-b77373a43bfb")
 			(effects
 				(font
@@ -4648,6 +4663,7 @@
 		(property "Reference" "BT1"
 			(at 40 -14.5 0)
 			(layer "F.SilkS")
+			(hide yes)
 			(uuid "d9909f87-b647-429a-9f16-e816b1b3cb7e")
 			(effects
 				(font
@@ -4812,7 +4828,7 @@
 		(descr "SOT-23, Handsoldering")
 		(tags "SOT-23")
 		(property "Reference" "Q1"
-			(at 0 -2.75 90)
+			(at 0.100 -3.000 0)
 			(layer "F.SilkS")
 			(uuid "1889a2be-1b01-444e-988d-c4bf2754f6ab")
 			(effects
@@ -5068,7 +5084,7 @@
 		(descr "C, Disc series, Radial, pin pitch=5.00mm, diameter*width=5*2.5mm^2, Capacitor, http://cdn-reichelt.de/documents/datenblatt/B300/DS_KERKO_TC.pdf")
 		(tags "C Disc series Radial pin pitch 5.00mm diameter 5mm width 2.5mm Capacitor")
 		(property "Reference" "C4"
-			(at 2.5 -2.5 0)
+			(at 2.5 2.5 0)
 			(layer "F.SilkS")
 			(uuid "a4ae674e-cf92-4f3e-9f11-2d4fc1c15519")
 			(effects
@@ -5668,6 +5684,7 @@
 		(property "Reference" "H2"
 			(at 0 -4.15 0)
 			(layer "F.SilkS")
+			(hide yes)
 			(uuid "f051b9b5-8e8c-4b42-be2d-a6eb6c6735e8")
 			(effects
 				(font
@@ -5772,7 +5789,7 @@
 		(descr "JST XH series connector, B5B-XH-A (http://www.jst-mfg.com/product/pdf/eng/eXH.pdf)")
 		(tags "connector JST XH vertical")
 		(property "Reference" "J6"
-			(at 5 -3.55 0)
+			(at 5.000 4.600 0)
 			(layer "F.SilkS")
 			(uuid "31f65139-da30-4352-b395-6e16e3a2e37a")
 			(effects
@@ -10770,6 +10787,17 @@
 				(xy 190.362171 131.269409) (xy 190.378008 131.16942) (xy 190.3905 131.090549) (xy 190.3905 130.909454)
 				(xy 190.388916 130.899456) (xy 190.398486 130.839024) (xy 190.41669 130.813965) (xy 190.98336 130.247296)
 				(xy 191.037877 130.219519) (xy 191.053364 130.2183) (xy 191.110548 130.2183)
+			)
+		)
+	)
+	(gr_text "SPINNING PLATFORM V2.0"
+		(at 150 152.5 0)
+		(layer "F.SilkS")
+		(uuid "90cd1eb8-6921-4871-a506-66b66adc1274")
+		(effects
+			(font
+				(size 1.2 1.2)
+				(thickness 0.18)
 			)
 		)
 	)
