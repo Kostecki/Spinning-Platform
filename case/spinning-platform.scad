@@ -37,9 +37,9 @@ deck_t       = 3.0;
 deck_top_z   = 34.0;                      // base rim is flush with this
 deck_bot_z   = deck_top_z - deck_t;       // 31
 deck_gap     = 2.0;                       // deck ↔ wall, all round: must never touch
-bearing_h    = 8.0;                       // lazy-susan, 75 mm square
-bearing_sq   = 75.0;
-platform_d   = 112;                       // covers the bearing's 106 mm corner sweep
+bearing_h    = 8.0;                       // lazy-susan "3 inch" = 72 mm square (TODO: confirm thickness)
+bearing_sq   = 72.0;
+platform_d   = 112;                       // covers the bearing's ~102 mm corner sweep (72·√2)
 platform_t   = 4.0;
 
 // Load cell (Soldered 5 kg bar) — TODO measure screw size / hole spacing on arrival
@@ -101,6 +101,8 @@ assert(wall_gap(usb_x, usb_flange[0], led_x, led_boss_d) >= 1, "LED boss overlap
 assert(wall_gap(led_x, led_boss_d, pot_x, pot_boss_d) >= 1, "LED and pot bosses collide");
 assert(usb_west_hole - usb_nut_clear_d/2 > -inner/2 + 1, "USB-C screw too close to the west wall");
 assert(pot_x + pot_boss_d/2 < hx_x0 - 1, "pot boss runs into the HX711 posts");
+assert(platform_d/2 >= bearing_sq*sqrt(2)/2 + 3, "platform doesn't cover the bearing's rotating corners");
+assert(bearing_sq <= deck_sq, "bearing bigger than the deck");
 // behind the wall: the PCB starts at Y=37, so parts must end before it (strip is free of PCB)
 pcb_north_y = 37;
 assert(inner/2 - pot_depth > pcb_north_y + 1, "pot body reaches over the PCB");
