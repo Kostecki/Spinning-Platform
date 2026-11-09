@@ -7614,8 +7614,8 @@
 		(uuid "0a543224-c571-4598-b2a0-b990ad7c540b")
 	)
 	(gr_rect
-		(start 110 158)
-		(end 190 170.7)
+		(start 112 158)
+		(end 192 170.7)
 		(stroke
 			(width 0.3)
 			(type solid)
@@ -7624,17 +7624,7 @@
 		(layer "Dwgs.User")
 		(uuid "4895c1a0-9bae-47e3-bb14-4a741302cbaa")
 	)
-	(gr_rect
-		(start 110.5 110.5)
-		(end 189.5 189.5)
-		(stroke
-			(width 0.15)
-			(type solid)
-		)
-		(fill no)
-		(layer "Dwgs.User")
-		(uuid "4218a9a6-f055-4bb1-8799-167550b82a8f")
-	)
+
 	(gr_circle
 		(center 132.5 142)
 		(end 136 142)
@@ -7744,8 +7734,8 @@
 		(uuid "e8831031-f07e-4ffe-9d57-95dc3ae0cf76")
 	)
 	(gr_rect
-		(start 111 157.5)
-		(end 125.5 171.3)
+		(start 111 158)
+		(end 138 170.7)
 		(stroke
 			(width 0.1)
 			(type solid)
@@ -7754,9 +7744,9 @@
 		(layer "Edge.Cuts")
 		(uuid "eba5b8ad-9494-4bac-b76f-c57c0ff173a3")
 	)
-	(gr_circle
-		(center 184 164.35)
-		(end 188.5 164.35)
+(gr_rect
+		(start 166 158)
+		(end 193 170.7)
 		(stroke
 			(width 0.1)
 			(type solid)
@@ -7807,8 +7797,8 @@
 		(layer "Edge.Cuts")
 		(uuid "1421804a-abdc-4345-a4e7-a581cce3b9bf")
 	)
-	(gr_text "fixed-end post"
-		(at 118 155.5 0)
+	(gr_text "fixed-end post (floor plate)"
+		(at 124.5 156.5 0)
 		(layer "Dwgs.User")
 		(uuid "2d8f9b1b-a186-4cd4-9aa4-6376fc7706a1")
 		(effects
@@ -7818,8 +7808,8 @@
 			)
 		)
 	)
-	(gr_text "overload stop"
-		(at 184 158.5 0)
+	(gr_text "free-end pillar (foot plate)"
+		(at 179.5 156.5 0)
 		(layer "Dwgs.User")
 		(uuid "aaa6e48e-8439-4626-8934-f654b52511d3")
 		(effects
@@ -7829,18 +7819,7 @@
 			)
 		)
 	)
-	(gr_text "floating deck 79x79"
-		(at 150 112 0)
-		(layer "Dwgs.User")
-		(uuid "4823b93d-1b27-48d5-ab33-2d6ae82a12d4")
-		(effects
-			(font
-				(size 1 1)
-				(thickness 0.2)
-			)
-		)
-	)
-	(gr_text "MOTOR (hangs from deck, bottom 5 mm above PCB)"
+	(gr_text "MOTOR (hangs from shell top, bottom 5.4 mm above PCB)"
 		(at 150 137 0)
 		(layer "Dwgs.User")
 		(uuid "ce360bcc-8b79-42b1-910d-82425155c9d8")
@@ -7851,7 +7830,7 @@
 			)
 		)
 	)
-	(gr_text "LOAD CELL 80x12.7 (8.7 mm above PCB)"
+	(gr_text "LOAD CELL 80x12.7 (5.7 mm above PCB)"
 		(at 150 164.35 0)
 		(layer "Dwgs.User")
 		(uuid "2d1b3a68-c10f-4274-a132-aeae2859d9f4")
@@ -7873,7 +7852,7 @@
 			)
 		)
 	)
-	(gr_text "wire / plug strip (USB-C, LED, pot on north wall)"
+	(gr_text "front wall: pot (USB-C + LED on the back wall)"
 		(at 150 105 0)
 		(layer "Dwgs.User")
 		(uuid "86553836-f9c9-4bb3-9d5a-b302668698b1")
