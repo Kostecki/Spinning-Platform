@@ -740,7 +740,7 @@ def interference(c):
 
 def reset(c):
     """Remove what a previous build() made (its components and parameters)."""
-    names = {'Shell', 'Collar ring', 'Floor plate', 'Foot plate', 'Platform', 'Reference parts',
+    names = {'Shell', 'Collar ring', 'Floor plate', 'Foot plate', 'Platform', 'Reference parts', 'Test prints',
              'Base', 'Deck', 'Riser'}  # last three: the old floating-deck layout
     for occ in list(c.root.occurrences):
         if occ.component.name in names:
@@ -806,6 +806,69 @@ def export_stl(out_dir, names=None):
         print('NOT EXPORTED (not built?):', missing)
     for n in (names or PRINTED):
         print(f'{n}: print {PRINTED[n]}')
+    return written
+
+
+# test prints: (file, source body, world box x0,x1,y0,y1,z0,z1 in mm, how to print, what it checks)
+TESTS = [
+    ('test-usb-plate', 'Foot plate', (-21, 21, -56, -43, -1, 13), 'as modelled, bottom on the bed',
+     'USB-C board in its recess + M2 screws, LED press-fit'),
+    ('test-usb-notch', 'Shell', (-25, 25, -56, -49, 0, 16), 'upside down (the flat cut on the bed)',
+     'plate in the skirt notch: 1 mm gap above, 0.5 mm at the sides'),
+    ('test-pot-wall', 'Shell', (-14, 14, 48, 56, 8, 33), 'standing, bottom cut on the bed',
+     'pot shoulder against the boss, thread through the wall, nut'),
+    ('test-motor-top', 'Shell', (-23, 23, -10, 26, 33, 41), 'upside down, top on the bed',
+     'motor boss in the shaft hole, M3 into the ear pilots, collar ring seat'),
+    ('test-column-insert', 'Shell', (43.5, 52.3, 19.5, 29.5, 11, 22), 'insert end up (cut on the bed)',
+     'M3x5.7 heat-set insert, M3 screw from below'),
+    ('test-bearing-insert', 'Shell', (26, 37, 26, 37, 33, 41), 'upside down, top on the bed',
+     'M3x3 heat-set insert, skin under it (position is still the 72 mm guess)'),
+    ('test-hub', 'Platform', (-9, 9, -9, 9, 40, 53), 'upside down, platform face on the bed',
+     'D-bore on the motor shaft'),
+]
+
+
+def export_test_stl(out_dir):
+    """Cut small test pieces out of the built model and write them as STL (plus the collar ring)."""
+    import os
+    app = adsk.core.Application.get()
+    design = adsk.fusion.Design.cast(app.activeProduct)
+    root = design.rootComponent
+    os.makedirs(out_dir, exist_ok=True)
+    bodies = {b.name: b for occ in root.allOccurrences for b in occ.bRepBodies}
+    tbm = adsk.fusion.TemporaryBRepManager.get()
+    occ = root.occurrences.addNewComponent(adsk.core.Matrix3D.create())
+    comp = occ.component
+    comp.name = 'Test prints'
+    written = []
+    try:
+        bf = comp.features.baseFeatures.add()
+        bf.startEdit()
+        pieces = []
+        for name, src, (x0, x1, y0, y1, z0, z1), how, what in TESTS:
+            tb = tbm.copy(bodies[src])
+            box = tbm.createBox(adsk.core.OrientedBoundingBox3D.create(
+                adsk.core.Point3D.create((x0 + x1) / 20, (y0 + y1) / 20, (z0 + z1) / 20),
+                adsk.core.Vector3D.create(1, 0, 0), adsk.core.Vector3D.create(0, 1, 0),
+                (x1 - x0) / 10, (y1 - y0) / 10, (z1 - z0) / 10))
+            tbm.booleanOperation(tb, box, adsk.fusion.BooleanTypes.IntersectionBooleanType)
+            b = comp.bRepBodies.add(tb, bf)
+            b.name = name
+            pieces.append((b, how, what))
+        bf.finishEdit()
+        em = design.exportManager
+        for b, how, what in pieces:
+            b = comp.bRepBodies.itemByName(b.name)
+            path = os.path.join(out_dir, b.name + '.stl')
+            opts = em.createSTLExportOptions(b, path)
+            opts.meshRefinement = adsk.fusion.MeshRefinementSettings.MeshRefinementHigh
+            opts.sendToPrintUtility = False
+            em.execute(opts)
+            written.append(path)
+            print(f'{b.name}: print {how}. Checks: {what}')
+    finally:
+        occ.deleteMe()
+    written += export_stl(out_dir, ['Collar ring'])
     return written
 
 
