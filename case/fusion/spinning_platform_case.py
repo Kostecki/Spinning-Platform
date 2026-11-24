@@ -63,7 +63,6 @@ PARAMS = [
     ('batt_h', '23', '21700 in holder, above the PCB'),
     ('top_in_z', 'pcb_top_z + batt_h + 1.4 mm', 'underside of the top'),
     ('top_z', 'top_in_z + top_t', 'top surface'),
-    ('column_d', '6', 'shell columns down to the PCB mounting holes'),
     # bearing + platform
     ('bearing_h', '8', 'lazy-susan thickness (TODO confirm)'),
     ('bearing_sq', '72', 'lazy-susan square size'),
@@ -95,7 +94,15 @@ PARAMS = [
     ('motor_ear_pitch', '35', ''),
     ('motor_boss_d', '9.5', ''),
     ('shaft_d', '5', ''), ('shaft_flat', '3', 'across the flats'), ('shaft_len', '9.5', 'above the motor face'),
-    ('m3_pilot', '2.5', 'M3 thread-forming pilot'),
+    ('m3_pilot', '2.5', 'M3 machine screw straight into plastic (motor, HX711)'),
+    ('m3_clear', '3.2', ''),
+    # CNC Kitchen M3 heat-set inserts (spec sheet)
+    ('insert_hole', '4', 'M3 insert hole (D3)'), ('insert_wall', '1.6', 'min wall around the hole'),
+    ('insert_short', '3', 'M3x3 length'), ('insert_long', '5.7', 'M3x5.7 length'),
+    ('insert_extra', '1', 'blind hole depth = insert length + 1 mm (spec sheet)'),
+    ('top_boss_d', '9', 'under the top, around each bearing insert'),
+    ('top_boss_h', '1', 'limited by the 21700 holder underneath'),
+    ('column_d', 'insert_hole + 2*insert_wall', 'shell columns down to the PCB mounting holes (insert + min wall)'),
     # front wall: the pot alone, centred
     ('wall_mid_z', '(skirt_z + top_z)/2', ''),
     ('pot_x', '0', ''), ('pot_hole', '7', ''), ('pot_wall', '4', ''), ('pot_boss_d', '16', ''),
@@ -396,10 +403,16 @@ def build_shell(c):
     for x, y in PCB_MOUNT:
         s.circle({'x': str(x), 'y': str(y)}, 'column_d')
     extrude(comp, s, s.profiles(), 'top_in_z - pcb_top_z', '-z', OP.JoinFeatureOperation, body, 'Columns')
-    s = Sk(c, comp, plane(c, comp, 'xy', 'pcb_top_z'), 'Column pilots')
+    # M3x5.7 heat-set insert at the bottom end of each column, screw clearance above it
+    col_bot = plane(c, comp, 'xy', 'pcb_top_z')
+    s = Sk(c, comp, col_bot, 'Column inserts')
     for x, y in PCB_MOUNT:
-        s.circle({'x': str(x), 'y': str(y)}, 'm3_pilot')
-    extrude(comp, s, s.profiles(), 'top_in_z - pcb_top_z - 1 mm', '+z', OP.CutFeatureOperation, body, 'Column pilots')
+        s.circle({'x': str(x), 'y': str(y)}, 'insert_hole')
+    extrude(comp, s, s.profiles(), 'insert_long + insert_extra', '+z', OP.CutFeatureOperation, body, 'Column inserts')
+    s = Sk(c, comp, col_bot, 'Column screw clearance')
+    for x, y in PCB_MOUNT:
+        s.circle({'x': str(x), 'y': str(y)}, 'm3_clear')
+    extrude(comp, s, s.profiles(), 'insert_long + 4 mm', '+z', OP.CutFeatureOperation, body, 'Column screw clearance')
 
     # collar + shaft hole: the only opening in the top
     s = Sk(c, comp, top, 'Collar')
@@ -413,11 +426,15 @@ def build_shell(c):
     extrude(comp, s, s.profiles(), 'top_t', '+z', OP.CutFeatureOperation, body, 'Shaft hole')
 
     # blind pilots: bearing bottom plate from above, motor ears from below
-    s = Sk(c, comp, top, 'Bearing pilots')
-    for sx in ('-', ''):
-        for sy in ('-', ''):
-            s.circle({'x': f'{sx}bearing_bot_hole', 'y': f'{sy}bearing_bot_hole'}, 'm3_pilot')
-    extrude(comp, s, s.profiles(), 'pilot_depth', '-z', OP.CutFeatureOperation, body, 'Bearing pilots')
+    bh = [{'x': f'{sx}bearing_bot_hole', 'y': f'{sy}bearing_bot_hole'} for sx in ('-', '') for sy in ('-', '')]
+    s = Sk(c, comp, top_in, 'Bearing insert bosses')
+    for w in bh:
+        s.circle(w, 'top_boss_d')
+    extrude(comp, s, s.profiles(), 'top_boss_h', '-z', OP.JoinFeatureOperation, body, 'Bearing insert bosses')
+    s = Sk(c, comp, top, 'Bearing inserts')
+    for w in bh:
+        s.circle(w, 'insert_hole')
+    extrude(comp, s, s.profiles(), 'insert_short + insert_extra', '-z', OP.CutFeatureOperation, body, 'Bearing inserts')
     s = Sk(c, comp, top_in, 'Motor pilots')
     for sx in ('-', ''):
         s.circle({'x': f'{sx}motor_ear_pitch/2', 'y': 'motor_off'}, 'm3_pilot')
@@ -676,6 +693,10 @@ def checks(c):
     need(v('usb_z + 2.9 mm') + v('float_gap - stop_h') + 0.3 <= v('pcb_bottom_z'), 'PCB can land on the LED')
     need(v('usb_z - usb_flange_h/2 - 0.15 mm') >= 0.8, 'sliver under the USB-C flange recess too thin')
     need(v('skirt_z') < v('foot_t'), 'skirt does not hide the gap')
+    need(v('top_in_z - top_boss_h') >= v('pcb_top_z + batt_h') + 0.3, 'bearing insert bosses hit the 21700 holder')
+    need(v('top_t + top_boss_h - insert_short - insert_extra') >= 1.0 - 1e-6, 'too little skin under the bearing inserts')
+    need(v('insert_long + 4 mm') <= v('top_in_z - pcb_top_z') - 1, 'column screw clearance breaks through the top')
+    need(v('insert_long + 4 mm') > v('insert_long + insert_extra'), 'column screw clearance shorter than the insert hole')
     need(v('collar_id') > v('hub_d') + 1, 'hub rubs the collar')
     need(v('top_in_z - motor_body_h') > v('pcb_top_z') + 3, 'motor too close to the PCB')
     return msgs
