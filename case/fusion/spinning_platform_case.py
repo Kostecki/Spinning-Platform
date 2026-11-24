@@ -20,10 +20,11 @@ plate (back), so the cable is never weighed; the pot is alone on the front, cent
 
 Assembly:
  1. Shell: motor ears → top (M3 thread-forming from below), HX711 → its posts,
-    pot → front wall (nut from inside, through the open bottom).
+    pot → front wall from inside (shoulder against the wall), nut on the outside.
  2. Floor plate: cell fixed end → post (screws from under the floor), PCB → standoffs.
- 3. Wire up, slide floor + PCB into the shell, 4× M3 from under the floor through
-    standoffs + PCB into the shell's columns.
+ 2b. M3x6 from under the floor through the H1 standoff + PCB, nut on top of the PCB.
+ 3. Wire up, slide floor + PCB into the shell, 3× M3 from under the floor through
+    standoffs + PCB into the heat-set inserts in the shell's columns.
  4. Foot plate: USB-C → back panel; pillar up through the floor/PCB cutouts, 2 screws from
     under the foot plate into the cell's free end. Stick on rubber feet.
  5. Bearing bottom plate → top (rotate the top plate 45° to reach the corner holes),
@@ -92,8 +93,8 @@ PARAMS = [
     ('motor_body_d', '28.2', ''), ('motor_body_h', '19', ''),
     ('motor_off', '8', 'body centre north of the shaft'),
     ('motor_ear_pitch', '35', ''),
-    ('motor_boss_d', '9.5', ''),
-    ('shaft_d', '5', ''), ('shaft_flat', '3', 'across the flats'), ('shaft_len', '9.5', 'above the motor face'),
+    ('motor_boss_d', '9.2', 'measured; 1.7 mm tall'),
+    ('shaft_d', '5', ''), ('shaft_flat', '3', 'across the flats'), ('shaft_len', '9.7', 'ear face to tip: 1.7 boss + 8 brass shaft (direct measure gave 9.2; deeper bore is the safe side)'), ('shaft_flat_len', '6', 'flats from the tip (measured)'),
     ('m3_pilot', '2.5', 'M3 machine screw straight into plastic (motor, HX711)'),
     ('m3_clear', '3.2', ''),
     # CNC Kitchen M3 heat-set inserts (spec sheet)
@@ -106,13 +107,14 @@ PARAMS = [
     # front wall: the pot alone, centred
     ('wall_mid_z', '(skirt_z + top_z)/2', ''),
     ('pot_x', '0', ''), ('pot_hole', '7', ''), ('pot_wall', '4', ''), ('pot_boss_d', '16', ''),
-    ('pot_body_d', '17', 'assumed'), ('pot_depth', '11', ''),
+    ('pot_body_d', '17.2', 'measured width'), ('pot_plateau', '1.5', 'shoulder between thread and body, sits on the wall'),
+    ('pot_depth', 'pot_plateau + 9 mm', 'shoulder + 9 mm housing (measured)'),
     # USB-C panel socket + RGB charge LED side by side on the foot plate, back edge.
-    # The pair (flange left edge .. LED holder flange right edge) is centred on x = 0.
+    # The pair (USB-C flange left edge .. LED right edge) is centred on x = 0.
     ('led_pitch', '16', 'USB-C centre to LED centre'),
-    ('led_hole', '5.14', 'RGB LED panel holder'), ('led_wall', '4.5', 'panel thickness the holder wants'),
-    ('led_flange_d', '8', 'holder flange outside the panel (TODO measure)'),
-    ('led_depth', '10', 'LED + holder + legs behind the panel (TODO measure)'),
+    ('led_hole', '5.14', '5 mm RGB LED press-fits from behind, its rim stops on the wall'), ('led_wall', '4.5', ''),
+    ('led_flange_d', 'led_hole', 'what shows outside (no holder, just the LED)'),
+    ('led_depth', '10', 'flat-top LED: rim + legs behind the panel'),
     ('usb_cut_w', '13', ''), ('usb_cut_h', '3.5', ''),
     ('usb_flange_w', '20.1', ''), ('usb_flange_h', '7', ''), ('usb_flange_t', '1.6', ''),
     ('usb_hole_d', '2.3', 'M2 clearance, nuts behind the plate'), ('usb_hole_pitch', '16.1', ''),
@@ -135,6 +137,9 @@ PARAMS = [
 ]
 
 PCB_MOUNT = [(-47.5, 25), (48.5, 24.5), (-47.5, -47.5), (47.5, -47.5)]  # from KiCad, fixed
+# No shell column at H1: J1's pluggable terminal next to it may overhang its header toward the
+# column. H1 is just floor plate + PCB, clamped with an M3 nut on top of the PCB.
+COLUMN_MOUNT = PCB_MOUNT[1:]
 STOP_BUMPS = [(-30, 44), (30, 44), (-30, -44), (30, -44)]
 PARTS = ('shell', 'floor', 'foot', 'platform', 'reference')
 
@@ -400,17 +405,17 @@ def build_shell(c):
     top = plane(c, comp, 'xy', 'top_z')
     # columns down to the PCB mounting holes; M3 from under the floor plate threads in here
     s = Sk(c, comp, top_in, 'Columns')
-    for x, y in PCB_MOUNT:
+    for x, y in COLUMN_MOUNT:
         s.circle({'x': str(x), 'y': str(y)}, 'column_d')
     extrude(comp, s, s.profiles(), 'top_in_z - pcb_top_z', '-z', OP.JoinFeatureOperation, body, 'Columns')
     # M3x5.7 heat-set insert at the bottom end of each column, screw clearance above it
     col_bot = plane(c, comp, 'xy', 'pcb_top_z')
     s = Sk(c, comp, col_bot, 'Column inserts')
-    for x, y in PCB_MOUNT:
+    for x, y in COLUMN_MOUNT:
         s.circle({'x': str(x), 'y': str(y)}, 'insert_hole')
     extrude(comp, s, s.profiles(), 'insert_long + insert_extra', '+z', OP.CutFeatureOperation, body, 'Column inserts')
     s = Sk(c, comp, col_bot, 'Column screw clearance')
-    for x, y in PCB_MOUNT:
+    for x, y in COLUMN_MOUNT:
         s.circle({'x': str(x), 'y': str(y)}, 'm3_clear')
     extrude(comp, s, s.profiles(), 'insert_long + 4 mm', '+z', OP.CutFeatureOperation, body, 'Column screw clearance')
 
@@ -660,6 +665,8 @@ def build_reference(c):
     box('USB-C socket', 'usb_face_y + usb_panel_t', 'x', 'usb_x - usb_body_w/2', 'usb_x + usb_body_w/2',
         'z', 'usb_z - usb_body_h/2', 'usb_z + usb_body_h/2', 'usb_depth', 'xz', '+y')
     cyl('Charge LED', 'usb_face_y + led_wall', {'x': 'led_x', 'z': 'usb_z'}, '5.8 mm', 'led_depth', 'xz', '+y')
+    hx_, hy_ = PCB_MOUNT[0]
+    cyl('H1 nut', 'pcb_top_z', {'x': f'{hx_} mm', 'y': f'{hy_} mm'}, '6.4 mm', '2.4 mm')
     for b in comp.bRepBodies:
         b.opacity = 0.45
     return comp
@@ -676,7 +683,7 @@ def checks(c):
 
     need(abs(v('pot_x')) < 0.01, 'pot is not centred')
     need(abs(v('usb_x - usb_flange_w/2') + v('led_x + led_flange_d/2')) < 0.01, 'USB-C + LED pair is not centred')
-    need(v('led_x - led_flange_d/2') - v('usb_x + usb_flange_w/2 + 0.15 mm') >= 1, 'LED holder flange touches the USB-C flange')
+    need(v('led_x - led_flange_d/2') - v('usb_x + usb_flange_w/2 + 0.15 mm') >= 1, 'LED too close to the USB-C flange')
     need(v('led_x - led_boss_w/2') - v('usb_x + usb_hole_pitch/2 + usb_nut_d/2') >= 0.5, 'LED boss leaves no room for the USB-C nut')
     need(v('usb_hole_pitch/2 - usb_nut_d/2') - v('usb_body_w/2') >= 0.5, 'USB-C nuts hit the socket body')
     need(v('led_depth') <= v('usb_depth'), 'LED reaches past the floor plate notch')
@@ -699,6 +706,8 @@ def checks(c):
     need(v('insert_long + 4 mm') > v('insert_long + insert_extra'), 'column screw clearance shorter than the insert hole')
     need(v('collar_id') > v('hub_d') + 1, 'hub rubs the collar')
     need(v('top_in_z - motor_body_h') > v('pcb_top_z') + 3, 'motor too close to the PCB')
+    need(v('top_in_z + shaft_len - top_z - 0.5 mm') <= v('shaft_flat_len'), 'hub grips the round part of the shaft, not just the flats')
+    need(v('top_in_z + shaft_len - top_z - 0.5 mm') >= 4, 'too little shaft in the hub')
     return msgs
 
 
