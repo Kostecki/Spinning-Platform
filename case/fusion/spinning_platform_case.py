@@ -2,8 +2,9 @@
 
 Run inside Fusion (Utilities > Scripts and Add-Ins, or via the Fusion MCP):
     exec(open('<repo>/case/fusion/spinning_platform_case.py').read()); build(clean=True)
-It builds into the active design. Every dimension is a user parameter
-(Modify > Change Parameters), and the sketches are driven by those parameters.
+It builds into the active design; export_stl(dir) then writes the printed parts as STL.
+Every dimension is a user parameter (Modify > Change Parameters), and the sketches are
+driven by those parameters.
 
 Coordinates: origin = motor shaft axis at the underside of the foot plate (rubber feet go
 below that), +Y = front (pot), Z up. PCB coords: X = x_kicad - 150, Y = 150 - y_kicad.
@@ -768,6 +769,44 @@ def colourise(c):
             if name:
                 a = c.design.appearances.itemByName(name) or c.design.appearances.addByCopy(lib.appearances.itemByName(name), name)
                 b.appearance = a
+
+
+# printed parts: body name -> how to lay it on the bed (the STL keeps model orientation)
+PRINTED = {
+    'Shell': 'upside down, top on the bed',
+    'Collar ring': 'flat',
+    'Floor plate': 'as modelled, bottom on the bed',
+    'Foot plate': 'as modelled, bottom on the bed',
+    'Platform': 'upside down, top face on the bed',
+}
+
+
+def export_stl(out_dir, names=None):
+    """Write one STL per printed part into out_dir (model orientation; rotate in the slicer).
+
+    Run after build(), e.g. export_stl('/path/to/stl'). Returns the written paths.
+    """
+    import os
+    app = adsk.core.Application.get()
+    design = adsk.fusion.Design.cast(app.activeProduct)
+    os.makedirs(out_dir, exist_ok=True)
+    em = design.exportManager
+    written = []
+    for occ in design.rootComponent.allOccurrences:
+        for b in occ.bRepBodies:
+            if b.name in PRINTED and (names is None or b.name in names):
+                path = os.path.join(out_dir, b.name.lower().replace(' ', '-') + '.stl')
+                opts = em.createSTLExportOptions(b, path)
+                opts.meshRefinement = adsk.fusion.MeshRefinementSettings.MeshRefinementHigh
+                opts.sendToPrintUtility = False
+                em.execute(opts)
+                written.append(path)
+    missing = [n for n in (names or PRINTED) if n.lower().replace(' ', '-') + '.stl' not in map(os.path.basename, written)]
+    if missing:
+        print('NOT EXPORTED (not built?):', missing)
+    for n in (names or PRINTED):
+        print(f'{n}: print {PRINTED[n]}')
+    return written
 
 
 def build(parts=PARTS, clean=False):
