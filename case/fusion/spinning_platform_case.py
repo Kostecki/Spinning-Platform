@@ -13,7 +13,8 @@ needs that sketch fixed by hand.
 Whole-case weighing, like a kitchen scale:
   table → feet → FOOT PLATE → pillar → load cell → post → FLOOR PLATE → PCB/columns → SHELL
 The shell (walls + closed top, printed upside down) hangs on the cell ~1 mm above the foot
-plate; its skirt hides that gap. The only opening on top is the shaft hole, inside a collar.
+plate; its skirt hides that gap. The only opening on top is the shaft hole, inside a collar
+(a separate ring glued into a recess, so the shell can print upside down without supports).
 The bearing sits on the top, the platform rests on the bearing (drive pins + D-shaft hub,
 lifts off for cleaning). USB-C and the charge LED sit side by side in a panel on the foot
 plate (back), so the cable is never weighed; the pot is alone on the front, centred.
@@ -76,9 +77,11 @@ PARAMS = [
     ('hub_d', '12', ''),
     ('peg_d', '3', 'drive pins into the bearing top plate holes (TODO hole size - 0.4)'),
     ('peg_h', '1.5', ''),
-    ('collar_id', '14', 'raised ring around the shaft hole'),
+    ('collar_id', '14', 'raised ring around the shaft hole (separate part, glued in)'),
     ('collar_od', '18', ''),
-    ('collar_h', '2', ''),
+    ('collar_h', '2', 'height above the top surface'),
+    ('collar_seat', '1', 'recess in the top the ring sits in'),
+    ('collar_clear', '0.1', 'per side, ring in its recess (glue gap)'),
     # load cell (TODO measure on arrival)
     ('cell_l', '80', ''), ('cell_w', '12.7', ''), ('cell_h', '12.7', ''),
     ('cell_y', '-14.35', 'cell centre line'),
@@ -141,7 +144,7 @@ PCB_MOUNT = [(-47.5, 25), (48.5, 24.5), (-47.5, -47.5), (47.5, -47.5)]  # from K
 # column. H1 is just floor plate + PCB, clamped with an M3 nut on top of the PCB.
 COLUMN_MOUNT = PCB_MOUNT[1:]
 STOP_BUMPS = [(-30, 44), (30, 44), (-30, -44), (30, -44)]
-PARTS = ('shell', 'floor', 'foot', 'platform', 'reference')
+PARTS = ('shell', 'collar', 'floor', 'foot', 'platform', 'reference')
 
 
 AX = {'x': 0, 'y': 1, 'z': 2}
@@ -419,13 +422,10 @@ def build_shell(c):
         s.circle({'x': str(x), 'y': str(y)}, 'm3_clear')
     extrude(comp, s, s.profiles(), 'insert_long + 4 mm', '+z', OP.CutFeatureOperation, body, 'Column screw clearance')
 
-    # collar + shaft hole: the only opening in the top
-    s = Sk(c, comp, top, 'Collar')
-    s.circle({'x': '0', 'y': '0'}, 'collar_od')
-    extrude(comp, s, s.profiles(), 'collar_h', '+z', OP.JoinFeatureOperation, body, 'Collar')
-    s = Sk(c, comp, top, 'Collar bore')
-    s.circle({'x': '0', 'y': '0'}, 'collar_id')
-    extrude(comp, s, s.profiles(), 'collar_h', '+z', OP.CutFeatureOperation, body, 'Collar bore')
+    # seat for the separate collar ring + shaft hole: the only opening in the top
+    s = Sk(c, comp, top, 'Collar seat')
+    s.circle({'x': '0', 'y': '0'}, 'collar_od + 2*collar_clear')
+    extrude(comp, s, s.profiles(), 'collar_seat', '-z', OP.CutFeatureOperation, body, 'Collar seat')
     s = Sk(c, comp, top_in, 'Shaft hole')
     s.circle({'x': '0', 'y': '0'}, 'motor_boss_d + 1.5 mm')
     extrude(comp, s, s.profiles(), 'top_t', '+z', OP.CutFeatureOperation, body, 'Shaft hole')
@@ -590,6 +590,20 @@ def build_foot(c):
     return comp
 
 
+def build_collar(c):
+    """Ring around the shaft hole, printed flat and glued into its seat in the top."""
+    comp = new_comp(c, 'Collar ring')
+    s = Sk(c, comp, plane(c, comp, 'xy', 'top_z - collar_seat'), 'Collar ring')
+    s.circle({'x': '0', 'y': '0'}, 'collar_od')
+    s.circle({'x': '0', 'y': '0'}, 'collar_id')
+    s.done()
+    prof = adsk.core.ObjectCollection.create()
+    prof.add(next(p for p in s.sk.profiles if p.profileLoops.count == 2))  # the ring, not the inner disc
+    body = extrude(comp, s, prof, 'collar_seat + collar_h', '+z', OP.NewBodyFeatureOperation, name='Collar ring').bodies.item(0)
+    body.name = 'Collar ring'
+    return comp
+
+
 def build_platform(c):
     comp = new_comp(c, 'Platform')
     pz = plane(c, comp, 'xy', 'platform_z')
@@ -705,6 +719,8 @@ def checks(c):
     need(v('insert_long + 4 mm') <= v('top_in_z - pcb_top_z') - 1, 'column screw clearance breaks through the top')
     need(v('insert_long + 4 mm') > v('insert_long + insert_extra'), 'column screw clearance shorter than the insert hole')
     need(v('collar_id') > v('hub_d') + 1, 'hub rubs the collar')
+    need(v('collar_id') > v('motor_boss_d + 1.5 mm') + 2, 'collar seat leaves too little floor around the shaft hole')
+    need(v('top_t - collar_seat') >= 2.5, 'top too thin under the collar seat')
     need(v('top_in_z - motor_body_h') > v('pcb_top_z') + 3, 'motor too close to the PCB')
     need(v('top_in_z + shaft_len - top_z - 0.5 mm') <= v('shaft_flat_len'), 'hub grips the round part of the shaft, not just the flats')
     need(v('top_in_z + shaft_len - top_z - 0.5 mm') >= 4, 'too little shaft in the hub')
@@ -723,7 +739,7 @@ def interference(c):
 
 def reset(c):
     """Remove what a previous build() made (its components and parameters)."""
-    names = {'Shell', 'Floor plate', 'Foot plate', 'Platform', 'Reference parts',
+    names = {'Shell', 'Collar ring', 'Floor plate', 'Foot plate', 'Platform', 'Reference parts',
              'Base', 'Deck', 'Riser'}  # last three: the old floating-deck layout
     for occ in list(c.root.occurrences):
         if occ.component.name in names:
@@ -734,7 +750,7 @@ def reset(c):
 
 
 COLOURS = {  # display only
-    'Shell': 'Plastic - Matte (White)', 'Floor plate': 'Plastic - Matte (Blue)',
+    'Shell': 'Plastic - Matte (White)', 'Collar ring': 'Plastic - Matte (White)', 'Floor plate': 'Plastic - Matte (Blue)',
     'Foot plate': 'Plastic - Matte (Gray)', 'Platform': 'Plastic - Matte (Yellow)',
     'PCB': 'Plastic - Matte (Green)', 'Load cell': 'Plastic - Matte (Red)',
     'Bearing': 'Plastic - Matte (Black)', 'Motor': 'Plastic - Matte (Yellow)',
@@ -765,7 +781,7 @@ def build(parts=PARTS, clean=False):
     if clean:
         reset(c)
     ensure_params(c)
-    fns = {'shell': build_shell, 'floor': build_floor, 'foot': build_foot,
+    fns = {'shell': build_shell, 'collar': build_collar, 'floor': build_floor, 'foot': build_foot,
            'platform': build_platform, 'reference': build_reference}
     for p in parts:
         fns[p](c)
